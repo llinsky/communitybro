@@ -28,3 +28,6 @@
 [submodule "aux/netcontrol-connectors"]
 	path = aux/netcontrol-connectors
 	url = git@github.com:CommunityBro/bro-netcontrol.git
+[submodule "aux/luajit"]
+	path = aux/luajit
+	url = https://github.com/LuaJIT/LuaJIT
