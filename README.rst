@@ -16,6 +16,10 @@ Organizations that long ago forked Bro for their own internal needs, but no long
 wish to maintain the differences should consider submitting to Community Bro - our default
 license for submissions is ASF 2.0.
 
+To get started:
+
+    git clone git@github.com:CommunityBro/communitybro.git --recursive
+
 For more documentation, research publications, and community contact
 information, please see Bro's home page:
 
