@@ -1,0 +1,3 @@
+When no other TCP analyzer attaches to an initial TCP handshake on a different port, this analyzer logs a variable part of the payload (set by the variable tcp_excerpt_size). Use an excerpt size greater than the MTU to do full packet capture on an unknown TCP flow.
+
+This captures on originator packets with SEQ <= 1, ACK <=1 (which should include handshake and first protocol packet) and non-originator packets with SEQ <= 1 (which should include handshake and first protocol response).

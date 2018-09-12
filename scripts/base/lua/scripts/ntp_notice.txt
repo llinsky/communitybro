@@ -1,0 +1,69 @@
+--[[
+
+PoC detections for Lua
+
+]]--
+
+
+--sample NTP-notice
+
+-- List NTP servers here
+time_servers = bro.newSet(bro.newAddr("192.168.0.1"), bro.newAddr("192.168.0.53"))
+time_servers:add(bro.newAddr("192.168.50.1"))
+time_servers:add(bro.newAddr("172.0.0.1"))
+
+--subnet_exclude = bro.newSet("TYPE_SUBNET")
+--subnet_exclude:add(bro.newSubnet("192.168.2.0", "24"))
+subnet_exclude = bro.newSubnet("192.168.2.0", "24")
+
+--change "TYPE_ADDR" to "addr"
+ntp_server_exclude = bro.newSet("addr")
+ntp_server_exclude:add(bro.newAddr("192.168.0.1"))
+ntp_server_exclude:add(bro.newAddr("192.168.50.1"))
+ntp_server_exclude:add(bro.newAddr("10.0.0.1"))
+ntp_server_exclude:add(bro.newAddr("172.0.0.1"))
+
+function bro_init()
+    print "ntp-notice bro_init called!"
+    bro.redefEnum("Notice::Type", "notice::Query_Request_To_Unauthorized_Source")
+    print "ntp-notice bro_init done!"
+end
+
+function ntp_message(c, is_orig, msg)
+    print "ntp_message called!"
+
+    --TODO: how can we check that ELEMENTS of the subnet contain orig_h? Not like this
+    -- We would have to put it in a table or vector and check each element
+    --[[if ( subnet_exclude:contains(c.id.orig_h) ) then
+        return
+    end]]
+    if ( subnet_exclude:contains(c.id.orig_h) ) then
+        return
+    end
+
+    --this is just a test
+    if ( not subnet_exclude:contains(bro.newAddr("192.168.2.3")) ) then
+        print "ERROR -- subnet checking is not working!"
+    end
+
+    if ( (not ntp_server_exclude:contains(c.id.orig_h)) and ( not time_servers:contains(c.id.resp_h)) ) then
+        notice = bro.newRecord("Notice::Info")
+        notice.note = bro.lookup("Notice::Type", "notice::Query_Request_To_Unauthorized_Source")
+        notice.msg = ("NTP update request sent to Unauthorized NTP Source: " .. c.id.orig_h:asString())
+        notice.sub = "Severity: 1.0"
+        notice.identifier = c.id.orig_h:asString()
+        notice.suppress_for = bro.newInterval(3600)
+
+        bro.call("NOTICE", notice)
+        print "Sent notice!"
+        return
+    end
+
+    print "Chose not to send notice!"
+end
+
+
+
+
+
+

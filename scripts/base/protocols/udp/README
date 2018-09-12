@@ -1,0 +1,1 @@
+When no other UDP analyzer attaches to an initial UDP request or UDP reply on a different port, this analyzer logs a variable part of the payload (set by the variable udp_excerpt_size). Use an excerpt size greater than the MTU to do full packet capture on an unknown UDP

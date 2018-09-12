@@ -1,0 +1,30 @@
+[submodule "aux/bro-aux"]
+	path = aux/bro-aux
+	url = git@github.com:CommunityBro/bro-aux.git
+[submodule "aux/binpac"]
+	path = aux/binpac
+	url = git@github.com:CommunityBro/binpac.git
+[submodule "aux/broccoli"]
+	path = aux/broccoli
+	url = git@github.com:CommunityBro/broccoli.git
+[submodule "aux/broctl"]
+	path = aux/broctl
+	url = git@github.com:CommunityBro/broctl.git
+[submodule "aux/btest"]
+	path = aux/btest
+	url = git@github.com:CommunityBro/btest.git
+[submodule "cmake"]
+	path = cmake
+	url = git@github.com:CommunityBro/cmake.git
+[submodule "src/3rdparty"]
+	path = src/3rdparty
+	url = git@github.com:CommunityBro/bro-3rdparty.git
+[submodule "aux/plugins"]
+	path = aux/plugins
+	url = git@github.com:CommunityBro/bro-plugins.git
+[submodule "aux/broker"]
+	path = aux/broker
+	url = git@github.com:CommunityBro/broker.git
+[submodule "aux/netcontrol-connectors"]
+	path = aux/netcontrol-connectors
+	url = git@github.com:CommunityBro/bro-netcontrol.git

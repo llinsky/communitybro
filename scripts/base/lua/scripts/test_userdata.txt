@@ -1,0 +1,967 @@
+--Test scripts for Lua userdata, including unit tests. Note: requires to be run with a pcap
+-- that contains at least one connection.
+
+--[[
+Prints a table recursively. 
+]]--
+
+function dumpvar(data)
+    -- cache of tables already printed, to avoid infinite recursive loops
+    local tablecache = {}
+    local buffer = ""
+    local padder = "    "
+ 
+    local function _dumpvar(d, depth)
+        local t = type(d)
+        local str = tostring(d)
+        if (t == "table") then
+            if (tablecache[str]) then
+                -- table already dumped before, so we dont
+                -- dump it again, just mention it
+                buffer = buffer.."<"..str..">\n"
+            else
+                tablecache[str] = (tablecache[str] or 0) + 1
+                buffer = buffer.."("..str..") {\n"
+                for k, v in pairs(d) do
+                    buffer = buffer..string.rep(padder, depth+1).."["..tostring(k).."] => "
+                    _dumpvar(v, depth+1)
+                end
+                buffer = buffer..string.rep(padder, depth).."}\n"
+            end
+        elseif (t == "number") then
+            buffer = buffer.."("..t..") "..str.."\n"
+        else
+            buffer = buffer.."("..t..") \""..str.."\"\n"
+        end
+    end
+    _dumpvar(data, 0)
+    --return buffer
+    print(buffer)
+    print()
+end
+
+
+--[[Basic unit tests for particular methods/meta-methods/bro library functions]]
+
+--Note: more complex test scripts and analysis is necessary for edge cases and situations
+--that depend on adjusted behavior on other parts of Bro
+
+--also tests __newindex
+function test__index(connection)
+    duration = connection.duration
+    uid = connection.uid
+
+    temp_orig = connection.orig
+    connection["orig"] = nil
+    orig_size = temp_orig.size + 1
+    temp_orig.size = temp_orig.size-2
+
+    print "Testing asString"
+
+    if connection.service then
+        connection.uid = (connection.service):asString()
+    else
+        return false
+    end
+
+    print "Testing tostring (method)"
+
+    if (connection.uid ~= (connection.service):tostring()) then
+        print "     Error: test__index          1"
+        return false
+    end
+
+    if connection.orig then
+        print "     Error: test__index          2"
+        return false
+    end
+
+    connection.orig = temp_orig
+    if (connection.orig.size ~= (orig_size - 3)) then
+        print "     Error: test__index          3"
+        return false
+    end
+
+    return true
+end
+
+--tests tostring, asString, bro.print
+function test__tostring(connection)
+    sentence = "Quick brown fox jumps over the lazy dog"
+    print(connection.start_time, connection.duration, connection.history)
+
+    bro.print(connection)
+    print(connection.orig, connection.resp)
+    connection.history = sentence
+
+    index = string.find(sentence, "brown")
+
+    if (string.find(connection.history, "brown") ~= index) then
+        print "     Error: test__tostring          1"
+        return false
+    end
+
+    string = tostring(connection)
+
+    if (string.find(string, "orig") < 2) then
+        print(string)
+        print "     Error: test__tostring          2"
+        return false
+    end
+
+    return true
+end
+
+--tests gc (kind of, not more than any others do) and copy
+function test__gc(connection)
+    ref = connection
+    clone = connection:copy()
+    refclone = clone
+    refclone.uid="clone"..refclone.uid
+    ref.uid="real"..ref.uid
+
+    -- These should NOT get garbage collected, because they SHOULD point to the same userdata
+    c1 = ref
+    c2 = ref
+    c3 = ref
+    c4 = ref
+    return true
+end
+
+--tests add, concat, eq, addto, remove
+function test__add(connection)
+    str = connection.history .. connection.uid
+    str2 = connection.history .. connection.uid
+    print(str)
+    if (str ~= str2) then
+        print "     Error: test__add            1"
+        return false
+    end
+    print "Testing string concatenation"
+
+    connection.history = "lua"..connection.history
+    print(connection.orig.num_pkts==connection.resp.num_pkts)
+    size = (connection.service):getSize()
+    newtable = connection.service + connection.service
+    if (size ~= newtable:getSize()) then
+        print "     Error: test__add            2"
+        return false
+    end
+    --TODO: How to add enum to a set? bro.lookup("EnumName", "EnumValName")?
+
+    newtable:add("LUAPROTO")
+    print(newtable)
+    if ((size + 1) ~= newtable:getSize()) then
+        print "     Error: test__add            3"
+        return false
+    end
+    table = bro.newTable("string", "double")
+    print(table)
+    table["val1"] = 6
+    table.val2 = 5
+    table.val3 = 4.23
+    table.val2 = 7
+    print(table)
+    if (connection.smb_state) then
+        if (connection.smb_state.uid_map) then
+            print(connection.smb_state.uid_map)
+        end
+    end
+    --print(bro.call("global_sizes"))
+    realtable = table:asTable()
+    dumpvar(realtable)
+
+    print "Testing tables and value addition"
+
+    if (table.val1*table.val2 ~= 42) then
+        print "     Error: test__add            4"
+        return false
+    end
+
+    --[[ This won't work for TableVals until we convert ListVal to base type 
+    -- in PushLuaValRecursiveAsTable (TODO)
+    if (realtable.val1*realtable.val2 ~= 42) then
+        print "     Error: test__add            5"
+        return false
+    end
+    --]]
+
+    if (table.badindex) then
+        print "     Error: test__add            6"
+        return false
+    end
+
+    if (realtable.badindex) then
+        print "     Error: test__add            7"
+        return false
+    end
+
+    if (table.val3 ~= 4.23) then
+        print "     Error: test__add            8"
+        return false
+    end
+
+    table2 = table:copy()
+    table.val6 = 9
+    if (table == table2) then
+        print "     Error: test__add            9"
+        return false
+    end
+
+    table2.val6 = 9
+    if (table ~= table2) then
+        print "     Error: test__add            10"
+        return false
+    end
+
+    --todo: more test cases for every value matchup for remove
+
+    table2.val6 = nil
+    if (table2.val6) then
+        print "     Error: test__add            11"
+        print(table2.val6)
+        return false
+    end
+
+    table2.val10 = 10
+
+    print("Creating Set")
+
+    set = bro.newSet("double")
+    set:add(4.2)
+    set:add(5.3)
+    set:add(2.14)
+    set:add(0.1)
+    set:add(5.3)
+
+    print("Added elements to set")
+
+    if (set:getSize() ~= 4) then
+        print "     Error: test__add            12"
+        return false
+    end
+
+    set:remove(2.14)
+    if (set:getSize() ~= 3) then
+        print "     Error: test__add            13"
+        return false
+    end
+
+    print("Printing Set")
+    print(set)
+
+
+    print "Testing clone addition, adding tables"
+    table3=table:clone()
+    table3.val8 = 14.6
+    table3.val9 = 3.14
+
+    print "Printing table and table3"
+    print(table)
+    print(table3)
+
+    table4 = bro.newTable(str, "double")
+    table4.val8 = 14.6
+    table4.val9 = 3.14
+
+    mergedTable = table+table4
+    print(mergedTable)
+    if (mergedTable ~= table3) then
+        print "     Error: test__add            14"
+        return false
+    end
+
+    print("Doing multiple addition")
+    table5 = table+table4+table2
+    print(table5)
+
+    mergedPort = connection.id.resp_p + connection.id.orig_p
+    print(mergedPort)
+
+    print(mergedPort:broType())
+    if (not mergedPort:isPort()) then
+        print "     Error: test__add            15"
+        return false
+    end
+
+    if (mergedPort.port ~= (connection.id.resp_p + connection.id.orig_p):getPort()) then
+        print(mergedPort.port)
+        print(connection.id.resp_p + connection.id.orig_p)
+        print "     Error: test__add            16"
+        return false
+    end
+
+    if (mergedPort:getPort() ~= (connection.id.resp_p.port + connection.id.orig_p.port)) then
+        print "     Error: test__add            17"
+        return false
+    end
+
+    print "Testing prefix, mask, and width"
+    sub = bro.newSubnet("75.75.75.0", 24)
+    print(sub:getPrefix())
+    print(sub:getMask())
+    print(sub:getWidth())
+
+
+    print "Testing addr addition"
+
+    print(connection.id.resp_h)
+    print(connection.id.orig_h)
+    print(connection.id.resp_p)
+    print(connection.id.orig_p)
+    print(connection.id.resp_p + connection.id.orig_p)
+
+    vec = bro.newVector(connection.id.resp_h, connection.id.orig_h)
+    print "Printing new vector"
+    print(vec)
+
+    print "Adding element to vector"
+    vec:add(connection.id.resp_h)
+    print(vec)
+    print "Adding element to existent index 2"
+    vec[2] = bro.newAddr("192.168.4.24")
+    print(vec)
+
+    if (not vec:isVector()) then
+        print "     Error: test__add            18"
+        return false
+    end
+
+    if (not set:isSet()) then
+        print "     Error: test__add            19"
+        return false
+    end
+
+    if (set:isTable()) then
+        print "     Error: test__add            20"
+        return false
+    end
+
+    if (not table:isTable()) then
+        print "     Error: test__add            21"
+        return false
+    end
+
+    if (table:isSet()) then
+        print "     Error: test__add            22"
+        return false
+    end
+
+    if (not vec["0"]:isAddr()) then
+        print "     Error: test__add            23"
+        return false
+    end
+
+    if (table4.val8 < 14) then
+        print "     Error: test__add            24"
+        return false
+    end
+
+    --vec[2] = 5 --this should fail, and it does
+    return true --
+end
+
+--tests "newX" functions, modifying complex types, adding and manipulation
+function test__userdata(connection)
+    nport = bro.newPort(80, "TCP")
+    if (nport:isTCP() ~= true) then
+        print "     Error: test__userdata       1"
+        return false
+    end
+    if (nport:getPort() ~= nport.port) then
+        print "     Error: test__userdata       2"
+        return false
+    end
+
+    naddr = bro.newAddr("192.168.4.24")
+    if (naddr:isAddr() ~= true) then
+        print "     Error: test__userdata       3"
+        return false
+    end
+    print(naddr:version())
+
+    nsubnet = bro.newSubnet("192.168.0.0", 16)
+    print(nsubnet)
+    if (not nsubnet:contains(naddr)) then
+        print "     Error: test__userdata       4"
+        return false
+    end
+
+    nsubnet2 = bro.newSubnet("192.168.168.0", 24)
+    print(nsubnet2)
+    if (nsubnet2:contains(naddr)) then
+        print "     Error: test__userdata       5"
+        return false
+    end
+
+    ninterval = bro.newInterval(300)
+    print(ninterval)
+    if (not ninterval:isInterval()) then
+        print "     Error: test__userdata       6"
+        return false
+    end
+
+    local table = bro.newTable("string", "connection")
+    table.index1 = connection
+    conn2 = connection:asCopy()
+    conn2.uid = "clone"..connection.uid
+    if (conn2.smb_state) then
+        conn2.smb_state = nil
+    end
+    table.index2 = conn2
+    print(table)
+    if (conn2 == connection) then
+        print "     Error: test__userdata       7"
+        return false
+    end
+
+    if (not conn2.service == connection.service) then
+        print "     Error: test__userdata       8"
+        return false
+    end
+
+    return true
+end
+
+--tests toTable, pullValue from table, newX for complex types, modifying them, and pulling as tables
+function test__totable(connection)
+    table = connection.id:asTable()
+    dumpvar(table)
+
+    if (table.resp_p.port ~= connection.id.resp_p.port) then
+        print(table.resp_p.port)
+        print(connection.id.resp_p.port)
+        print "     Error: test__totable       1"
+        return false
+    end
+
+    return true
+end
+
+--ensures metadata and call() have no side effects, as per implementation, and any other random tests
+function test__random(connection)
+    connection() --should be a no-op (__call)
+
+    return true
+end
+
+--test other Val methods (non meta-events) for specific types, general Vals
+function test__methods(connection)
+    print "Connection size:"
+    print(connection:getSize())
+    print "Connection's id size:"
+    print(connection.id:getSize())
+    if (connection.id:getSize()+connection.orig:getSize() < connection.id:getSize()) then
+        print "     Error: test__methods       1"
+        return false
+    end
+
+    enum = bro.lookup("Log::ID", "DNP3::LOG")
+    print "Printing Enum as number"
+    print(enum)
+    print(enum:asNumber())
+
+    print("Printing types of connection and id (conn_id)")
+    print(connection:broType())
+    print(connection.id:broType())
+
+    if (connection.orig:broType() ~= connection.resp:broType()) then
+        print "     Error: test__methods       2"
+        return false
+    end
+
+    return true
+end
+
+--test lookup, redef, logging bifs, event generation
+function test__lookup(connection)
+    print "Printing DNS ports"
+    dns_ports = bro.lookup("DNS::ports")
+    print(dns_ports)
+
+    print "Printing all server ports"
+    all_ports = bro.lookup("likely_server_ports")
+    print(all_ports)
+
+    --Method for testing set membership added after test 1 (contains)
+    --Otherwise we have to do the below, because the commented version fails
+    --if (not ((all_ports + dns_ports) == all_ports)) then
+    print(dns_ports:getSize())
+    print(all_ports:getSize())
+
+    if (not ((all_ports + dns_ports):getSize() == all_ports:getSize())) then
+        print((all_ports + dns_ports):getSize())
+        print(all_ports + dns_ports)
+        print "     Error: test_lookup       1"
+        return false
+    end
+
+    print "Testing 1.1"
+
+    if (not all_ports:contains(dns_ports)) then
+        print((all_ports + dns_ports):getSize())
+        print(all_ports + dns_ports)
+        print "     Error: test_lookup       1.1"
+        return false
+    end
+
+    print "Adding new port to dns_ports"
+
+    port_udp = bro.newPort(56959,"UDP")
+    dns_ports:add(port_udp)
+    dns_ports:add(port_udp)
+    print "Printing DNS ports"
+    print(dns_ports)
+
+    print "Printing all server ports"
+    print(all_ports)
+
+    print "Removing the new port temporarily"
+    dns_ports:remove(port_udp)
+    print(dns_ports)
+
+    print "This should be false twice"
+    print(dns_ports:contains(all_ports))
+    print(dns_ports:contains(all_ports))
+    print "This should be true twice"
+    print(all_ports:contains(dns_ports))
+    print(all_ports:contains(dns_ports))
+
+    print "Re-adding that port"
+    dns_ports:add(port_udp)
+    print(dns_ports)
+
+    if (dns_ports:contains(bro.newPort(56939,"TCP"))) then
+        print(dns_ports)
+        print "     Error: test_lookup       1.11"
+        return false
+    end
+
+    if (not dns_ports:contains(port_udp)) then
+        print(dns_ports)
+        print "     Error: test_lookup       1.12"
+        return false
+    end
+
+    if (not dns_ports:contains(bro.newPort(56959,"UDP"))) then
+        print(dns_ports)
+        print "     Error: test_lookup       1.13"
+        return false
+    end
+
+    print "Testing 1.2"
+
+    if (dns_ports:contains(all_ports)) then
+        print((all_ports + dns_ports):getSize())
+        print(all_ports + dns_ports)
+        print "     Error: test_lookup       1.2"
+        return false
+    end
+
+    print "Testing 1.3"
+
+    if (all_ports:contains(dns_ports)) then
+        print((all_ports + dns_ports):getSize())
+        print(all_ports + dns_ports)
+        print "     Error: test_lookup       1.3"
+        return false
+    end
+
+    if (not all_ports:contains(all_ports)) then
+        print(all_ports)
+        print "     Error: test_lookup       1.4"
+        return false
+    end
+    
+    -- Testing elements
+    print "Testing elements method"
+    dns_ports_vector = dns_ports:elements()
+    print(dns_ports_vector)
+
+    print "Now printing one by one:"
+    print(dns_ports_vector:getSize()-1)
+    print ("Printed size")
+    for i=0,(dns_ports_vector:getSize()-1) do
+        print("Element: ", i)
+        print(dns_ports_vector[i])
+    end
+
+    if (not (all_ports + dns_ports):contains(dns_ports_vector)) then
+        print(dns_ports_vector)
+        print "     Error: test_lookup       1.5"
+        return false
+    end
+
+    print "Creating new table and testing contains"
+    tab = bro.newTable("string", "count")
+    tab["one"] = 1
+    tab["three"] = 3
+    print(tab)
+    if (not tab:contains(1)) then
+        print "     Error: test_lookup       1.6"
+        return false
+    elseif (tab:contains(2)) then
+        print "     Error: test_lookup       1.7"
+        return false
+    end
+
+    print "Printing DNS classes"
+    classes = bro.lookup("DNS::classes")
+    print(classes)
+
+    if (classes[1] ~= "C_INTERNET") then
+        print(classes[1])
+        print "     Error: test_lookup       2"
+        return false
+    end
+
+    print "Generating connection_established event"
+    bro.event("connection_established", connection)
+
+    return true
+end
+
+--tests newRecord, newRecordType, newLogRecord, logging BIF's, other BIF's
+function test__record(connection)
+    print "Creating new Record Type: luarecord"
+    bro.newRecordType("Lua::luarecord", "last_addr", "addr", "log", "luaid", "string", "log")
+
+    print("\nPrinting new luarecord instance:\n")
+    a = bro.newRecord("Lua::luarecord")
+    bro.print(a)
+    a.luaid = "ID000_Lua"
+    print(a)
+    print("\nThe Lua::luarecord was created and printed, apparently without segfaulting:\n")
+
+    print "Redeffing connection and adding luaid"
+    bro.redefRecord("connection", "luaid", "string", "log")
+    print("\n\n")
+
+    print "Redef ostensibly successful."
+
+    print "Redeffing connection and adding luaid_two"
+    bro.redefRecord(connection, "luaid_two", "string", "log")
+    print("\n\n")
+
+    print "Redef2 ostensibly successful."
+
+    print "\n"
+    print(bro.newRecord("connection"))
+    print "\n"
+
+    connection.luaid = "LUAID_Notherebefore_00001"
+    print(connection)
+
+    connection.luaid_two = "LUAID_Notherebefore_00002"
+    print(connection)
+
+    print "Redeffing connection and adding luastring"
+    bro.redefRecord("connection", "luastring", "string", "log")
+    connection.luastring = "Redef'd string"
+
+    print "Redeffing new record type luarecord:"
+    bro.redefRecord("Lua::luarecord", "luanumber", "count", "log")
+    connection.luastring = "Redef'd string"
+
+    
+    print("\nPrinting new Lua Info:\n")
+    b = bro.newRecord("Lua::luarecord")
+    bro.print(b)
+    b.luaid = "ID001_Lua"
+    print(b)
+
+    
+
+    --[[
+    Seg fault above due to bad FieldDecl? note, it's not clear if install_ID should be used 
+    for newRecordType, the enum code might not apply here because Bro is not written 
+    consistently
+    ]]
+    
+
+    print("\nPrinting new Arp Info:\n")
+    a = bro.newRecord("ARP::Info")
+    a.ts = bro.call("network_time")
+    print(a)
+    print("\n\n")
+    
+
+
+
+    print("\nPrinting new Record connection:\n")
+    print(bro.newRecord("connection"))
+    print("\n\n")
+
+    print("\nPrinting new DHCP Info Record:\n")
+    print(bro.newRecord("DHCP::Info"))
+    print("\n\n")
+    
+
+
+    return true
+end
+
+
+--[[should be run in bro_done after some more complex test cases are done 
+    on actively generated events during processing]]
+function TEST_ALL(connection_val, table_val, set_val, vector_val)
+    local failed = 0
+
+    if (test__index(connection_val) == true) then
+        print "\nTest:  test__index           passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__index           FAILED . . . \n"
+    end
+
+    if (test__tostring(connection_val) == true) then
+        print "\nTest:  test__tostring        passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__tostring        FAILED . . . \n"
+    end
+
+    if (test__gc(connection_val) == true) then
+        print "\nTest:  test__gc              passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__gc              FAILED . . . \n"
+    end
+
+    if (test__add(connection_val) == true) then
+        print "\nTest:  test__add             passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__add             FAILED . . . \n"
+    end
+
+    if (test__userdata(connection_val) == true) then
+        print "\nTest:  test__userdata        passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__userdata        FAILED . . . \n"
+    end
+
+    if (test__totable(connection_val) == true) then
+        print "\nTest:  test__totable         passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__totable         FAILED . . . \n"
+    end
+
+    if (test__random(connection_val) == true) then
+        print "\nTest:  test__random          passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__random          FAILED . . . \n"
+    end
+
+    if (test__methods(connection_val) == true) then
+        print "\nTest:  test__methods         passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__methods         FAILED . . . \n"
+    end
+
+    if (test__lookup(connection_val) == true) then
+        print "\nTest:  test__lookup          passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__lookup          FAILED . . . \n"
+    end
+
+    if (test__record(connection_val) == true) then
+        print "\nTest:  test__record          passed\n"
+    else
+        failed = failed + 1
+        print "\nTest:  test__record          FAILED . . . \n"
+    end
+
+    --... 
+
+
+    if (failed == 0) then
+        print "\n\nALL UNIT TESTS PASSED!!! \n\n"
+    else
+        print("\n\nNot all tests passed: failed: ", failed)
+    end
+
+
+end
+
+
+function bro_init ()
+
+    print "Doing internal tests"
+    bro.internalTests()
+
+   	print "test_userdata.lua running -- called bro_init"
+   	count = count + 100 --will this cause an error? nope
+
+    bro.redefEnum("Log::ID", "LuaTest")
+
+    bro.redefEnum("Log::ID", "LuaRecord::LOG")
+
+    print "Creating new Record Type: luainfo"
+    bro.newRecordType("luainfo", "last_addr", "addr", "log", "luaid", "string", "log")
+
+    print "Redeffing connection and adding luaid"
+    bro.redefRecord("connection", "luaid", "string", "log")
+    print("\n\n")
+
+    print "Redeffing connection and adding lua_info=luainfo"
+    bro.redefRecord("connection", "lua_info", "luainfo")
+    print("\n\n")
+
+    print "Printing my new record type, luainfo:"
+    print(bro.newRecord("luainfo"))
+
+    if (added_log == nil) then
+        print "About to create a log"
+        --Note: the bif is called __create_stream -- create_stream is a Bro script function
+        --bro.call("Log::__create_stream", bro.lookup("Log::ID", "LuaLog"), bro.newLog("lualogs", c) )
+        bro.call("Log::create_stream", bro.lookup("Log::ID", "LuaTest"), bro.newLog("luatest", "SMB::FileInfo") )
+        print "Created a log"
+
+        bro.call("Log::create_stream", bro.lookup("Log::ID", "LuaRecord::LOG"), bro.newLog("luarecord", "luainfo") )
+        print "Created custom Lua log"
+
+        added_log = true
+    end
+
+    print "Redeffing connection and adding lua_init_id"
+    bro.redefRecord("conn_id", "lua_init_id", "count", "log")
+    print("\n\n")
+
+    print "Redeffing connection and adding extra_id (which is another conn_id)"
+    bro.redefRecord("connection", "extra_id", "conn_id")
+
+
+end
+
+count = 999
+
+
+lastconn = nil
+
+
+function new_connection(c)
+	count = count + 1
+
+	if math.fmod(count,2) == 0 then
+		c.orig.state = 22222
+	elseif math.fmod(count,3) == 0 then
+		c.orig.state = 33333
+	end
+
+    c.id.lua_init_id = count
+	
+	print("New connection recorded in testuserdata, of type:", c:broType())
+
+end
+
+
+function connection_state_remove(c)
+    c.history = "Psled"
+
+    print(c)
+
+    print ">>>>>Setting extra_rec to a new conn_id record"
+    c.extra_id = bro.newRecord("conn_id")
+    c.extra_id.resp_h = c.id.resp_h
+    c.extra_id.orig_h = c.id.orig_h
+    print "Assigning ports now"
+    c.extra_id.resp_p = 3333
+    c.extra_id.orig_p = 8888
+    print(c.extra_id)
+
+    print ">>>>>Setting lua_info to a new record"
+    local r = bro.newRecord("luainfo")
+    print(r)
+    print ">>>> just printed the luainfo"
+    print(c.lua_info)
+    print ">>>> just printed c.luainfo"
+    c.lua_info = r
+    c.lua_info.last_addr = c.id.orig_h
+    c.lua_info.luaid = "LUA"..count
+
+
+   	if ((lastconn) and math.fmod(count,10)) then
+        print "Printing lastconn"
+        print(lastconn)
+
+   		if (lastconn.orig) then
+            if (lastconn.orig.state == 22222) then
+                lastconn.history = "Psled2"
+            end
+        else
+            print "ORIG UNINITIALIZED IN test_userdata!!!!"
+   		end
+   	end
+
+    print ">>>> about to log smb_state to LuaTest log (three times!)"
+    if (c.smb_state) then
+        if (c.smb_state.current_file) then
+            bro.call("Log::write", bro.lookup("Log::ID", "LuaTest"), c.smb_state.current_file);
+            bro.call("Log::write", bro.lookup("Log::ID", "LuaTest"), c.smb_state.current_file);
+            bro.call("Log::write", bro.lookup("Log::ID", "LuaTest"), c.smb_state.current_file);
+        end
+    end
+
+    print ">>>> about to log c.lua_info to LuaTest log (twice!)"
+    if (c.lua_info) then
+        bro.call("Log::write", bro.lookup("Log::ID", "LuaRecord::LOG"), c.lua_info);
+        c.lua_info.luaid = "LUA"..(count+1)
+        bro.call("Log::write", bro.lookup("Log::ID", "LuaRecord::LOG"), c.lua_info);
+    end
+
+    if (c["service"]) then
+    	print ( c["uid"] )
+	end
+
+
+    if (c["service"]) then
+        print(c.duration)
+	end
+
+    print "About to do some math on: "
+    print(count)
+    
+    if (math.fmod(count,7) == 0) then
+    	c.orig.state = 99999
+    	
+        p = c:copy()
+
+		p.orig.state = 77777
+
+		c = p
+	end
+    
+
+
+    lastconn = c
+
+    --print( "SHA256 Hash of connection:  ", bro.call("sha256_hash", c:tostring() ) )
+    print( "SHA256 Hash of connection:  ", bro.call("sha256_hash", "some words" ) )
+
+    print( "Natural logarithm of 100 (via BIF):", bro.call("ln", 100) )
+
+end
+
+
+
+function bro_done()
+        print "INITIATING TEST_ALL UNIT TESTS"
+        TEST_ALL(lastconn, 0, 0, 0)
+
+        print("Lua had ", (count-999-100), " flows during this run!")
+end
+
+
+
+
+
+
+
+
+

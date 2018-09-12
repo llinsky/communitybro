@@ -1,0 +1,4 @@
+
+function bro_init ()
+	print "Lua script running!"
+end

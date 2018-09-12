@@ -1,0 +1,271 @@
+--[[
+Prints a table recursively. 
+]]--
+
+function dumpvar(data)
+    -- cache of tables already printed, to avoid infinite recursive loops
+    local tablecache = {}
+    local buffer = ""
+    local padder = "    "
+ 
+    local function _dumpvar(d, depth)
+        local t = type(d)
+        local str = tostring(d)
+        if (t == "table") then
+            if (tablecache[str]) then
+                -- table already dumped before, so we dont
+                -- dump it again, just mention it
+                buffer = buffer.."<"..str..">\n"
+            else
+                tablecache[str] = (tablecache[str] or 0) + 1
+                buffer = buffer.."("..str..") {\n"
+                for k, v in pairs(d) do
+                    buffer = buffer..string.rep(padder, depth+1).."["..tostring(k).."] => "
+                    _dumpvar(v, depth+1)
+                end
+                buffer = buffer..string.rep(padder, depth).."}\n"
+            end
+        elseif (t == "number") then
+            buffer = buffer.."("..t..") "..str.."\n"
+        else
+            buffer = buffer.."("..t..") \""..str.."\"\n"
+        end
+    end
+    _dumpvar(data, 0)
+    --return buffer
+    print(buffer)
+    print()
+end
+
+
+
+
+function bro_init ()
+   	print "Lua script2 running! Called Bro_init"
+
+    --bro.event("connection_established", 2)
+    --print("\n\n")
+
+    bro.redefEnum("Log::ID", "LuaLog")
+    print("\n\n")
+
+    --todo: add "log"
+    --bro.redefRecord("connection", "luaid", "TYPE_STRING", "optional", "log")
+    --print("\n\n")
+
+    --print "Redef ostensibly successful."
+
+    --this should fail gracefully, because string_set is not a recordtype
+    g = bro.newRecord("string_set")
+    print(g)
+    print("\n")
+
+--[[
+    print("\nPrinting new Arp Info:\n")
+    a = bro.newRecord("ARP::Info")
+    a.ts = bro.call("network_time")
+    print(a)
+    print("\n\n")
+]]
+    --bro.newRecordType("luatype", "last_addr", "TYPE_ADDR", "optional", "log", "luaid", "TYPE_STRING", "optional", "log")
+
+--[[
+    print("\nPrinting new Record connection:\n")
+    print(bro.newRecord("connection"))
+    print("\n\n")
+
+    print("\nPrinting new DHCP Info Record:\n")
+    print(bro.newRecord("DHCP::Info"))
+    print("\n\n")
+    ]]
+
+end
+
+
+added_log = nil
+
+count = 999
+
+zzy = nil
+lastconn = nil
+
+
+function connection_established(c)
+    print("connection established:   ", c)
+    local waste1 = bro.newRecord("connection")
+    local waste2 = bro.newRecord("connection")
+    print(waste1==waste2)
+    for i=1,10,1 do
+        local waste = bro.newRecord("connection")
+    end
+end
+
+function connection_state_remove(c)
+
+    print "This is what a new Log Record looks like"
+    h=bro.newLog("lualogs", c)
+    print(h)
+    print("\n")
+
+    if (added_log == nil) then
+        print "About to create a log"
+        --Note: if something fails and bad arguments go into the BIF, we will get a seg fault
+        --bro.call("Log::__create_stream", bro.lookup("Log::ID", "LuaLog"), bro.newLog("lualogs", c) )
+        bro.call("Log::create_stream", bro.lookup("Log::ID", "LuaLog"), bro.newLog("lualogs", "SMB::FileInfo") )
+
+        --Note: TODO: Log::ID NOT defined in bro_init??? Ideally start after definitions and before bro_init,
+        --but we can also just make our own bro_init if we need to do it after
+        print "Created a log"
+
+        added_log = true
+    end
+
+    --bro.call("Log::__write", bro.lookup("Log::ID", "LuaLog"), c);
+    if (c.smb_state) then
+        if (c.smb_state.current_file) then
+            bro.call("Log::__write", bro.lookup("Log::ID", "LuaLog"), c.smb_state.current_file);
+        end
+    end
+
+
+    count = count + 1
+
+    --c.luaid = tostring(count)
+    --print("Lua id: ", c.luaid, "\n")
+
+    --c.outcast=6
+    print("\n\n")
+    print(bro.lookup("Log::ID", "LuaLog"))
+    print("\n\n")
+    
+    local zzx = nil
+
+     --[[ too verbose
+    print "Trying recursive print on toTable representation of connection"
+    h = c:asTable()
+    dumpvar(h)
+    print ("\n\n")
+    -- ]]
+
+    --[[
+
+    if math.fmod(count,21) == 0 then
+            print("Lua connection_state_remove called ", count, " times!")
+
+            --zzy = c["orig"]:asCopy()
+            --zzx = c["resp"]:asTable()
+            --dumpvar(zzx)
+
+            --if (lastconn) then
+                --c["self"] = lastconn
+            --end
+
+    elseif math.fmod(count,50) == 0 then
+            print("Lua connection_state_remove called ", count, " times!")
+            print("Assigning resp as userdata from orig") 
+            c["resp"] = c["orig"]
+
+            --print("Assigning orig as userdata from old connection") 
+            --if old connection is deleted, what happens here? should we ref it? if we do we need to call delete
+            --TODO: YES, we need to set userdata to be garbage collected and it's fine (override __gc)
+            
+            --c["orig"] = zzy
+
+    elseif math.fmod(count,54) == 0 then
+            print("Lua connection_state_remove called ", count, " times!")
+            print("Assigning orig as table")
+            --c["orig"] = zzx
+    end
+
+    if (c["service"]) then
+    	print ( c["uid"] )
+	end
+
+
+    if (c["service"]) then
+    	--dumpvar( c["duration"] )
+        print(c ["duration"] )
+	end
+
+
+
+    print "Trying normal print on connection (should call __tostring)"
+    print( c )
+    print ("\n\n")
+
+    print "Trying Broprint on orig, resp, and history of connection"
+    bro.print(c["orig"], c["resp"], c["history"]) --the advantage of using broprint is you can 
+                                                            -- print to file userdata, once we support those
+    print ("\n\n")
+
+    print "Same print with regular print statement, this should allow for non-userdata args better"
+    print ( c["orig"], c["start_time"], c["history"] )
+    print ("\n\n")
+
+    ]]
+
+    --c["orig"] = zzx --nil
+    if (c ~= 2) then
+        for i=2,1,-1 
+        do
+            print "We're running successfully!"
+            print(c:broType())
+            print("c isRecord: ", c:isRecord())
+            print("c isVector: ", c:isVector())
+            --print(c.invalidindex)
+        end
+    end
+
+    lastconn = c
+    --[[
+    print "Setting history to ACDC, should show up in conn.log" --this works
+    c["history"] = "ACDC"
+    print ("\n\n")
+
+	if (c["orig"]) then
+		if (c["orig"]["state"]) then
+    		print( c["orig"]["state"] )
+    	end
+    end
+
+	print("Setting state to 5")
+    if (c.orig) then
+        c["orig"]["state"] = 5
+    else
+        print "ORIG UNINITIALIZED!!!!"
+    end
+
+    --can use either syntax, this is probably more natural
+	if (c.orig) then
+        if (c.orig.state) then
+            print( c.orig.state )
+        end
+    else
+        print "ORIG UNINITIALIZED 2!!!!"
+    end
+
+    --lastconn = c.asCopy
+
+    --print("Taking hash of c.history")
+    --print()
+    --print( "SHA256 Hash of conn history and uid:  ", bro.call("sha256_hash", c.history, c.uid ) )
+
+    print "Made it to the end!" 
+    ]]
+end
+
+
+
+function bro_done()
+        print("Lua had ", count, " flows during this run!")
+        --print("Outcast: ", lastconn.outcast)
+end
+
+
+
+
+
+
+
+
+

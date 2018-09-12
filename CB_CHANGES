@@ -1,0 +1,23 @@
+2.5.5 | 2018-09-12
+
+   * Lua Script as alternative to Bro Script
+       
+       - Requires LuaJit - new Git submodule 
+       - Lua scripts do not require restart of Community Bro in order to process data 
+
+   * Defaults to jemalloc for production builds
+  
+   * JSON writer cleanups
+
+   * Modified file extraction serialization mechanism
+
+   * Branch optimization of crticial processing points
+    
+       - Packet Processing
+
+   * SMB Analyzer cleanups and augmentation
+   
+       - event smb1_trans2_session_setup_request(c: connection, hdr: SMB1::Header);
+       - event smb1_echo_response(c: connection, seq_num: count, mid: count, data: string);
+
+   * 

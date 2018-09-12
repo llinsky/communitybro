@@ -1,0 +1,101 @@
+--[[# Detects PlugX C2 seen over DNS
+# CrowdStrike 2015
+# josh.liburdi@crowdstrike.com
+#
+# Refs
+# http://totalhash.com/analysis/8006ee9e7ec862134b52cd8608f1fb5ae46a6c25
+# http://www.sophos.com/en-us/threat-center/threat-analyses/viruses-and-spyware/Troj~Plugx-AU/detailed-analysis.aspx
+]]
+
+--module CrowdStrike::PlugX;
+
+
+bro.redefEnum("Log::ID", "Found_DNS_C2")
+
+
+plugx_c2_dns_query_length = 120
+plugx_c2_dns_interval = 60 --seconds
+plugx_c2_dns_threshold = 5.0
+plugx_c2_dns_samples = 3
+
+
+const plugx_c2_dns_whitelist: set[string] = {
+    "barracudabrts.com",	# Barracuda Labs
+    "e5.sk",			# ESET
+    "dsintll.net",		# DeviceScape software
+    "dsrwl.net",		# DeviceScape software
+    "dsusl.net",		# DeviceScape software
+    "sophosxl.net",		# Sophos
+    };
+const plugx_c2_dns_chars: set[string] = {
+    "PB",
+    "OB",
+    "SE"
+    };
+
+event dns_request(c: connection, msg: dns_msg, query: string, qtype: count, qclass: count)
+{
+# qtype 16 is a TXT record
+if ( qtype != 16 ) return;
+
+# look for characters seen in PlugX DNS C2
+if ( |query| > 40 && query[6:8] in plugx_c2_dns_chars )
+    {
+    NOTICE([$note=notice::Found_DNS_C2,
+            $msg="PlugX C2 was identified over DNS",
+            $sub=query,
+            $conn=c,
+            $sub=fmt("Severity: 7"),
+            $identifier=cat(c$id$orig_h,query),
+            $ps_defining_query=fmt("src_ip = %s proto = dns", c$id$orig_h)]);
+    return;
+    }
+
+# for heuristic detection, only process query lengths greater than or equal to plugx_c2_dns_query_length
+if ( |query| < plugx_c2_dns_query_length ) return;
+
+# whitelist domains that trip the heuristic detection
+local stop = F;
+for ( pcdw in plugx_c2_dns_whitelist )
+    if ( pcdw in query )
+        stop = T;
+
+if ( stop == T ) return;
+
+SumStats::observe("plugx.c2.dns", [$host=c$id$orig_h], [$str=query]);
+}
+
+event bro_init()
+{
+# do a bunch of stuff required by sumstats
+# collect samples and use the hll_unique algorithm
+local r1: SumStats::Reducer = [$stream="plugx.c2.dns", $apply=set(SumStats::SAMPLE, SumStats::HLL_UNIQUE), $num_samples=plugx_c2_dns_samples];
+SumStats::create([$name="detect-plugx-c2-dns",
+                $epoch=plugx_c2_dns_interval,
+                $reducers=set(r1),
+                $epoch_result(ts: time, key: SumStats::Key, result: SumStats::Result) =
+                    {
+                    local r = result["plugx.c2.dns"];
+                    # calculate length of time that activty is monitored
+                    local dur = duration_to_mins_secs(r$end-r$begin);
+                    local samples = r$samples;
+                    local sub_msg = fmt("Sampled queries: ");
+                    if ( r$hll_unique >= plugx_c2_dns_threshold )
+                        {
+                        # walk the samples to collect the domains queried
+                        for ( i in samples )
+                            if ( samples[i]?$str )
+                                sub_msg = fmt("%s%s %s", sub_msg, i==0 ? "":",", samples[i]$str);
+
+                        NOTICE([$note=notice::Found_DNS_C2,
+                                $msg=fmt("PlugX C2 was identified over DNS (%d unique requests in %s)", r$hll_unique, dur),
+                                $sub=sub_msg,
+                                $src=key$host,
+                                $sub=fmt("Severity: 7"),
+                                $identifier=cat(key$host,sub_msg),
+                                $ps_defining_query=fmt("src_ip = %s proto = dns", key$host)]);
+                        }
+                    }
+                ]);
+}
+

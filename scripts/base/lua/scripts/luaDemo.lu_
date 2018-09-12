@@ -1,0 +1,17 @@
+function bro_init()
+    print "Lua_Demo bro_init called!"
+    bro.redefEnum("Notice::Type", "notice::Lua_Demo_New_Connection")
+    print "ntp-notice bro_init done!"
+end
+
+function new_connection(c)
+    notice = bro.newRecord("Notice::Info")
+    notice.note = bro.lookup("Notice::Type", "notice::Lua_Demo_New_Connection")
+    notice.msg = ("New connection between endpoints: " .. c.id:asString())
+    notice.sub = "Severity: 1.0"
+    notice.identifier = c.id.orig_h:asString()
+    notice.suppress_for = bro.newInterval(3600)
+
+    bro.call("NOTICE", notice)
+    print "Sent notice!"
+end
