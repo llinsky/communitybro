@@ -1,31 +1,30 @@
 ============================
-Bro Network Security Monitor
+Community Bro Network Security Monitor
 ============================
 
 Bro is a powerful framework for network analysis and security
 monitoring. Please see the INSTALL file for installation instructions
 and pointers for getting started. NEWS contains release notes for the
-current version, and CHANGES has the complete history of changes.
+current version, and CB_CHANGES and CHANGES has the complete history of changes.
 Please see COPYING for licensing information.
 
-You can download source and binary releases on:
+The CommunityBro mission statement is simple: We seek to expand on and accept changes
+from a broader community to accelerate the development, deployment and ease the usage of
+Bro. 
 
-    http://www.bro.org/download
-
-To get the current development version, clone our master git
-repository:
-
-    git clone --recursive git://git.bro.org/bro
+Organizations that long ago forked Bro for their own internal needs, but no longer
+wish to maintain the differences should consider submitting to Community Bro - our default
+license for submissions is ASF 2.0.
 
 For more documentation, research publications, and community contact
 information, please see Bro's home page:
 
-    http://www.bro.org
+    http://www.communitybro.org
 
 
-On behalf of the Bro Development Team,
+The CommunityBro Team would like to thank the Bro Core Development Team for their efforts.
 
-Vern Paxson & Robin Sommer,
-International Computer Science Institute &
-Lawrence Berkeley National Laboratory
-vern@icir.org / robin@icir.org
+CommunityBro Team and Contributors:
+    - Aaron Eppert (PacketSled)
+    - Chris Hinshaw (PacketSled)
+    - Leo Linsky
