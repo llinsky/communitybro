@@ -9,7 +9,7 @@ current version, and CB_CHANGES and CHANGES has the complete history of changes.
 Please see COPYING for licensing information.
 
 The CommunityBro mission statement is simple: We seek to expand on and accept changes
-from a broader community to accelerate the development, deployment and ease the usage of
+from the broader community to accelerate the development, deployment and ease the usage of
 Bro. 
 
 Organizations that long ago forked Bro for their own internal needs, but no longer
