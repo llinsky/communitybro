@@ -75,7 +75,9 @@ if (NOT BinPAC_ROOT_DIR AND
 endif ()
 FindRequiredPackage(BinPAC)
 
-if (ENABLE_JEMALLOC)
+set(HAVE_JEMALLOC false)
+if (NOT DISABLE_JEMALLOC OR ENABLE_JEMALLOC)
+    set(HAVE_JEMALLOC true)
     find_package(JeMalloc)
 endif ()
 
@@ -114,7 +116,7 @@ set(HAVE_PERFTOOLS false)
 set(USE_PERFTOOLS_DEBUG false)
 set(USE_PERFTOOLS_TCMALLOC false)
 
-if (NOT DISABLE_PERFTOOLS)
+if (ENABLE_PERFTOOLS AND NOT DISABLE_PERFTOOLS)
    find_package(GooglePerftools)
 endif ()
 
@@ -255,12 +257,14 @@ message(
     "\nAux. Tools:        ${INSTALL_AUX_TOOLS}"
     "\n"
     "\nGeoIP:             ${USE_GEOIP}"
+    "\n"
+    "\njemalloc:          ${HAVE_JEMALLOC}"
     "\ngperftools found:  ${HAVE_PERFTOOLS}"
     "\n        tcmalloc:  ${USE_PERFTOOLS_TCMALLOC}"
     "\n       debugging:  ${USE_PERFTOOLS_DEBUG}"
-    "\njemalloc:          ${ENABLE_JEMALLOC}"
-    "\nluajit:            ${LUA_FOUND}"
-    "\ndebugging lua:     ${LUA_DEBUG}"
+    "\n"
+    "\nLuaJIT:            ${LUA_FOUND}"
+    "\n       debugging:  ${LUA_DEBUG}"
     "\n"
     "\n================================================================\n"
 )
