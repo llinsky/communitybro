@@ -257,16 +257,20 @@ message(
     "\nAux. Tools:        ${INSTALL_AUX_TOOLS}"
     "\n"
     "\nGeoIP:             ${USE_GEOIP}"
-    "\n"
     "\njemalloc:          ${HAVE_JEMALLOC}"
     "\ngperftools found:  ${HAVE_PERFTOOLS}"
     "\n        tcmalloc:  ${USE_PERFTOOLS_TCMALLOC}"
     "\n       debugging:  ${USE_PERFTOOLS_DEBUG}"
     "\n"
+)
+
+if (ENABLE_LUAJIT) 
+message(
     "\nLuaJIT:            ${LUA_FOUND}"
     "\n       debugging:  ${LUA_DEBUG}"
     "\n"
-    "\n================================================================\n"
 )
+endif()
 
+message("\n================================================================\n")
 include(UserChangedWarning)
