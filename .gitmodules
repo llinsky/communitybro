@@ -28,3 +28,6 @@
 [submodule "aux/netcontrol-connectors"]
 	path = aux/netcontrol-connectors
 	url = https://github.com/CommunityBro/bro-netcontrol.git
+[submodule "aux/bifcl"]
+	path = aux/bifcl
+	url = https://github.com/CommunityBro/bifcl.git
