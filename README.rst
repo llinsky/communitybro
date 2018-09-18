@@ -18,7 +18,7 @@ license for submissions is ASF 2.0.
 
 To get started:
 
-    git clone git@github.com:CommunityBro/communitybro.git --recursive
+    git clone --recursive https://@github.com/CommunityBro/communitybro.git 
 
 For more documentation, research publications, and community contact
 information, please see Bro's home page:
