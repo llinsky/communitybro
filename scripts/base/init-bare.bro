@@ -4911,6 +4911,56 @@ export {
 	};
 }
 
+module EXIF_FILE_ANALYZER;
+export {
+	type Latitude: record {
+		deg:    double  &log &optional;
+		min:    double  &log &optional;
+		sec:    double  &log &optional;
+		dir:    string  &log &optional;
+	};
+
+	type Longitude: record {
+		deg:    double  &log &optional;
+		min:    double  &log &optional;
+		sec:    double  &log &optional;
+		dir:    string  &log &optional;
+	};
+
+	type GPS: record {
+		latitude:   Latitude    &log &optional;
+		longitude:  Longitude   &log &optional;
+		precision:  double                          &log &optional;
+		altitude_m: double                          &log &optional;
+	};
+
+	type Image: record {
+		w:              count  &log &optional;
+		h:              count  &log &optional;
+		cr:             string &log &optional;
+		orientation:    count  &log &optional;
+		desc:           string &log &optional;
+		ts:             string &log &optional;
+	};
+
+	type Camera: record {
+		make:       string &log &optional;
+		model:      string &log &optional;
+		software:   string &log &optional;
+	};
+
+	type ::Lens: record {
+		make:   string &log &optional;
+		model:  string &log &optional;
+	};
+
+	type Results: record {
+		gps:    GPS     &log &optional;
+		image:  Image   &log &optional;
+		camera: Camera  &log &optional;
+		lens:   Lens    &log &optional;
+	};
+}
 
 module GLOBAL;
 
