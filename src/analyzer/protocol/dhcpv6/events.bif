@@ -1,0 +1,56 @@
+
+## DHCPv6 Solicitation Message
+##
+## c: 		The connection
+## tid: 	Transaction ID
+## options: Options set for the message
+##
+event dhcpv6_solicit%(c: connection, is_orig: bool, tid: count, options: DHCPV6::Options%);
+
+## DHCPv6 Advertisement Message
+##
+## c: 		The connection
+## tid: 	Transaction ID
+## options: Options set for the message
+##
+event dhcpv6_advertise%(c: connection, is_orig: bool, tid: count, options: DHCPV6::Options%);
+
+## DHCPv6 Request Message
+##
+## c: 		The connection
+## tid: 	Transaction ID
+## options: Options set for the message
+##
+event dhcpv6_request%(c: connection, is_orig: bool, tid: count, options: DHCPV6::Options%);
+
+## DHCPv6 Reply Message
+##
+## c: 		The connection
+## tid: 	Transaction ID
+## options: Options set for the message
+##
+event dhcpv6_reply%(c: connection, is_orig: bool, tid: count, options: DHCPV6::Options%);
+
+## DHCPv6 Renew Message
+##
+## c: 		The connection
+## tid: 	Transaction ID
+## options: Options set for the message
+##
+event dhcpv6_renew%(c: connection, is_orig: bool, tid: count, options: DHCPV6::Options%);
+
+## DHCPv6 Release Message
+##
+## c: 		The connection
+## tid: 	Transaction ID
+## options: Options set for the message
+##
+event dhcpv6_release%(c: connection, is_orig: bool, tid: count, options: DHCPV6::Options%);
+
+## DHCPv6 Information Request Message
+##
+## c: 		The connection
+## tid: 	Transaction ID
+## options: Options set for the message
+##
+event dhcpv6_info_req%(c: connection, is_orig: bool, tid: count, options: DHCPV6::Options%);

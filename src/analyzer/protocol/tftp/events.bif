@@ -1,0 +1,31 @@
+## Developed by Leo Linsky for Packetsled. Copyright 2016.
+
+## Generated for TFTP write requests
+##
+## u: The connection
+##
+event tftp_write_request%(u: connection, filename: string, mode: string%);
+
+## Generated for TFTP read requests
+##
+## u: The connection
+##
+event tftp_read_request%(u: connection, filename: string, mode: string%);
+
+## Generated for TFTP replies to requests
+##
+## u: The connection
+##
+event tftp_reply%(u: connection%);
+
+## Generated for TFTP errors
+##
+## u: The connection
+##
+event tftp_error%(u: connection, errmsg: string%);
+
+## Generated at the end of a TFTP flow
+##
+## c: The connection
+##
+event tftp_flow_done%(u: connection%);

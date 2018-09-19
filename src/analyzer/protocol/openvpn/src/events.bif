@@ -1,0 +1,22 @@
+
+## Generated for hard openvpn connection resets. This generally
+## signifies a new connection attempt. or an attempt to repair a 
+## connection.
+##
+## c: The connection
+##
+event openvpn_hard_reset%(c: connection, proto: string%);
+
+## Generated for soft openvpn connection resets. This is generally
+## a key transition.
+##
+## c: The connection
+##
+event openvpn_soft_reset%(c: connection, source: string%);
+
+## Generated for openvpn tls establishment.
+##
+##
+## c: The connection
+##
+event openvpn_tlsestablished%(c: connection%);

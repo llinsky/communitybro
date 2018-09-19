@@ -4786,6 +4786,248 @@ export {
 	const sampling_duration = 10min &redef;
 }
 
+module DHCPV6;
+export {
+	type DUID_LLT: record {
+		hwtype:	 	count 	&log &optional;
+		duidtime:	count 	&log &optional;
+		lladdr: 	string 	&log &optional;
+	};
+
+	type DUID_EN: record {
+		entnum: 	count 	&log &optional;
+		identifier:	string	&log &optional;
+	};
+
+	type DUID_LL: record {
+		hwtype:	 	count 	&log &optional;
+		lladdr: 	string 	&log &optional;
+	};
+
+	type DUID_UUID: record {
+		hwtype:	 	count 	&log &optional;
+		lladdr: 	string 	&log &optional;
+	};
+
+	type DOMAIN_NAME: record {
+		name:		string	&log &optional;
+	};		
+
+	type DHCPV6_OPTION_IAADDR: record {
+		ipv6_addr:			addr	&log &optional;				
+		preferred_lifetime: count	&log &optional;
+		valid_lifetime:		count	&log &optional;
+		data:				string	&log &optional;
+	};
+
+	type DHCPV6_OPTION_IA_NA: record {
+		iaid:		count					&log &optional;
+		t1:			count					&log &optional;
+		t2:			count					&log &optional;
+		iaaddr:		DHCPV6_OPTION_IAADDR 	&log &optional;
+		data:		string					&log &optional;
+	};
+
+	type DHCPV6_OPTION_IAPREFIX: record {
+		prefix_addr:		addr	&log &optional;				
+		preferred_lifetime: count	&log &optional;
+		valid_lifetime:		count	&log &optional;
+		data:				string	&log &optional;	
+	};
+
+	type DHCPV6_OPTION_IA_PD: record {
+		iaid:		count					&log &optional;
+		t1:			count					&log &optional;
+		t2:			count					&log &optional;
+		iaprefix:	DHCPV6_OPTION_IAPREFIX 	&log &optional;
+		data:		string					&log &optional;
+	};
+
+	type DHCPV6_OPTION_IA_TA: record {
+		iaid:		count	&log &optional;
+		data:		string	&log &optional;
+	};
+
+	type DHCPV6_OPTION_CLIENTID: record {
+		msgtype:	count 		&log &optional;
+		duid_llt:	DUID_LLT 	&log &optional;
+		duid_en:	DUID_EN 	&log &optional;
+		duid_ll:	DUID_LL 	&log &optional;
+		duid_uuid:	DUID_UUID 	&log &optional;
+	};
+
+	type DHCPV6_OPTION_SERVERID: record {
+		msgtype:	count 		&log &optional;
+		duid_llt:	DUID_LLT 	&log &optional;
+		duid_en:	DUID_EN 	&log &optional;
+		duid_ll:	DUID_LL 	&log &optional;
+		duid_uuid:	DUID_UUID 	&log &optional;
+	};
+
+	type DHCPV6_OPTION_ORO: record {
+		options:	vector of count &log &optional;
+	};
+
+	type DHCPV6_OPTION_ELAPSED_TIME: record {
+		elapsed_time:		count 	&log &optional;
+	};
+
+	type DHCPV6_OPTION_DNS_SERVERS: record {
+		dns_name_servers: 	vector of addr 	&log &optional;
+	};
+
+	type DHCPV6_OPTION_DOMAIN_LIST: record {
+		searchlist: 	string 	&log &optional;
+	};
+
+	type DHCPV6_OPTION_VENDOR_CLASS: record {
+		enterprise_number: 	count	&log &optional;
+		vendor_class_data: 	string	&log &optional;
+	};
+
+	type DHCPV6_OPTION_INFO_REFRESH_TIME: record {
+		refresh_time:	count		&log &optional;
+	};
+
+	type DHCPV6_OPTION_CLIENT_FQDN: record {
+		flags:			count		&log &optional;
+		domain_name:	string		&log &optional;
+	};
+
+	type Options: record {
+		clientid:			DHCPV6_OPTION_CLIENTID 			&log &optional; #  0
+		serverid:			DHCPV6_OPTION_SERVERID			&log &optional; #  1
+		ia_na:				DHCPV6_OPTION_IA_NA				&log &optional; #  2
+		ia_ta:				DHCPV6_OPTION_IA_TA				&log &optional; #  3
+		iaaddr:				DHCPV6_OPTION_IAADDR			&log &optional; #  4
+		oro:   				DHCPV6_OPTION_ORO 				&log &optional; #  5
+		elapsed_time:		DHCPV6_OPTION_ELAPSED_TIME		&log &optional; #  6
+		vendor_class:		DHCPV6_OPTION_VENDOR_CLASS		&log &optional; #  7
+		name_servers:		DHCPV6_OPTION_DNS_SERVERS		&log &optional; #  8
+		domain_list:		DHCPV6_OPTION_DOMAIN_LIST		&log &optional; #  9
+		ia_pd:				DHCPV6_OPTION_IA_PD				&log &optional; # 10
+		info_refresh_time:	DHCPV6_OPTION_INFO_REFRESH_TIME	&log &optional; # 11
+		client_fqdn:		DHCPV6_OPTION_CLIENT_FQDN		&log &optional; # 12
+	};
+}
+
+module EXIF_FILE_ANALYZER;
+export {
+	type Latitude: record {
+		deg:    double  &log &optional;
+		min:    double  &log &optional;
+		sec:    double  &log &optional;
+		dir:    string  &log &optional;
+	};
+
+	type Longitude: record {
+		deg:    double  &log &optional;
+		min:    double  &log &optional;
+		sec:    double  &log &optional;
+		dir:    string  &log &optional;
+	};
+
+	type GPS: record {
+		latitude:   Latitude    &log &optional;
+		longitude:  Longitude   &log &optional;
+		precision:  double                          &log &optional;
+		altitude_m: double                          &log &optional;
+	};
+
+	type Image: record {
+		w:              count  &log &optional;
+		h:              count  &log &optional;
+		cr:             string &log &optional;
+		orientation:    count  &log &optional;
+		desc:           string &log &optional;
+		ts:             string &log &optional;
+	};
+
+	type Camera: record {
+		make:       string &log &optional;
+		model:      string &log &optional;
+		software:   string &log &optional;
+	};
+
+	type Lens: record {
+		make:   string &log &optional;
+		model:  string &log &optional;
+	};
+
+	type Results: record {
+		gps:    GPS     &log &optional;
+		image:  Image   &log &optional;
+		camera: Camera  &log &optional;
+		lens:   Lens    &log &optional;
+	};
+}
+
+module MQTT;
+export {
+	type HEADER: record {
+		hdrlen              : count &log &optional;
+		QoS                 : count &log &optional;
+		dup                 : count &log &optional;
+		retain              : count &log &optional;
+	};
+
+	type CONNECT: record {
+		hdr                 : HEADER &log &optional;
+		protocol_name       : string &log &optional;
+		protocol_version    : count  &log &optional;
+		connect_flags       : count  &log &optional;
+		keep_alive          : count  &log &optional;
+		client_id           : string &log &optional;
+		clean_session       : count  &log &optional;
+		willtopic           : string &log &optional;
+		willmsg             : string &log &optional;
+		willusername        : string &log &optional;
+		willpassword        : string &log &optional;
+	};
+
+	type CONNACK: record {
+		hdr                 : HEADER &log &optional;
+		reserved            : count  &log &optional;
+		return_code         : count  &log &optional;
+	};
+
+	type PUBLISH: record {
+		hdr                 : HEADER &log &optional;
+		topic               : string &log &optional;
+		msg_id              : count  &log &optional;
+		message             : string &log &optional;
+	};
+
+	type PUBACK: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+	};
+
+	type SUBSCRIBE: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+		topic               : string &log &optional;
+		requested_qos       : count  &log &optional;
+	};
+
+	type SUBACK: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+		granted_qos         : count  &log &optional;
+	};
+
+	type UNSUBSCRIBE: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+		topic               : string &log &optional;
+	};
+
+	type UNSUBACK: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+	};
+}
+
 module GLOBAL;
 
 global SyslogFacility: table[string] of count = {

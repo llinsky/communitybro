@@ -1,0 +1,8 @@
+## This event is generated each time file analysis performs
+## EXIF analysis on a file of interest
+##
+## f: The file.
+##
+## exif_data: The results of the entropy testing.
+##
+event file_exif%(f: fa_file, exif_results: EXIF_FILE_ANALYZER::Results%);

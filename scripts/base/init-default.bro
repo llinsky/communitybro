@@ -73,15 +73,20 @@
 @load base/protocols/xmpp
 @load base/protocols/udp
 @load base/protocols/tcp
-#@load base/protocols/telnet
 @load base/protocols/arp
 @load base/protocols/bittorrent
+@load base/protocols/openvpn
+@load base/protocols/tftp
+@load base/protocols/dhcpv6
+@load base/protocols/telnet
+@load base/protocols/mqtt
 
 @load base/files/pe
 @load base/files/hash
 @load base/files/extract
 @load base/files/unified2
 @load base/files/x509
+@load base/files/exif
 
 @load base/misc/find-checksum-offloading
 @load base/misc/find-filtered-trace
