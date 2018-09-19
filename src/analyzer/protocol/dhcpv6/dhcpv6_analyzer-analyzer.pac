@@ -47,7 +47,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 						case DUID_EN: {
 							RecordVal* option_duid_en = new RecordVal(BifType::Record::DHCPV6::DUID_EN);
 							option_duid_en->Assign(0, new Val((*ptr)->clientid()->duid_en()->entnum(), TYPE_COUNT));
-							option_duid_en->Assign(1, ToHex(std_str((*ptr)->clientid()->duid_en()->identifier()), false));
+							option_duid_en->Assign(1, Dhcpv6ToHex(std_str((*ptr)->clientid()->duid_en()->identifier()), false));
 							
 							option_clientid->Assign(2, option_duid_en);
 						}
@@ -70,7 +70,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 							std::cout << "DUID_UUID FOUND" << std::endl;
 							// RecordVal* option_duid_uuid = new RecordVal(BifType::Record::DHCPV6::DUID_UUID);
 							// option_duid_uuid->Assign(0, new Val((*ptr)->clientid()->duid_uuid()->hwtype(), TYPE_COUNT));
-							// option_duid_uuid->Assign(1, ToHex(std_str((*ptr)->clientid()->duid_uuid()->lladdr()), false));
+							// option_duid_uuid->Assign(1, Dhcpv6ToHex(std_str((*ptr)->clientid()->duid_uuid()->lladdr()), false));
 							
 							// option_clientid->Assign(4, option_duid_uuid);
 						}
@@ -106,7 +106,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 						case DUID_EN: {
 							RecordVal* option_duid_en = new RecordVal(BifType::Record::DHCPV6::DUID_EN);
 							option_duid_en->Assign(0, new Val((*ptr)->serverid()->duid_en()->entnum(), TYPE_COUNT));
-							option_duid_en->Assign(1, ToHex(std_str((*ptr)->serverid()->duid_en()->identifier()), false));
+							option_duid_en->Assign(1, Dhcpv6ToHex(std_str((*ptr)->serverid()->duid_en()->identifier()), false));
 							
 							option_serverid->Assign(2, option_duid_en);
 						}
@@ -127,7 +127,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 						case DUID_UUID: {
 							RecordVal* option_duid_uuid = new RecordVal(BifType::Record::DHCPV6::DUID_UUID);
 							option_duid_uuid->Assign(0, new Val((*ptr)->serverid()->duid_uuid()->hwtype(), TYPE_COUNT));
-							//option_duid_uuid->Assign(1, ToHex(std_str((*ptr)->serverid()->duid_uuid()->lladdr()), false));
+							//option_duid_uuid->Assign(1, Dhcpv6ToHex(std_str((*ptr)->serverid()->duid_uuid()->lladdr()), false));
 							
 							option_serverid->Assign(4, option_duid_uuid);
 						}
@@ -167,7 +167,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 							}
 								break;
 							default: {
-								option_ia_na->Assign(4, ToHex(std_str((*ptr)->ia_na()->data()), false));
+								option_ia_na->Assign(4, Dhcpv6ToHex(std_str((*ptr)->ia_na()->data()), false));
 							}
 								break;
 						}
@@ -181,7 +181,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 				case DHCPV6_OPTION_IA_TA: {
 					RecordVal* option_ia_ta = new RecordVal(BifType::Record::DHCPV6::DHCPV6_OPTION_IA_TA);					
 					option_ia_ta->Assign(0, new Val((*ptr)->ia_ta()->iaid(), TYPE_COUNT));
-					option_ia_ta->Assign(1, ToHex(std_str((*ptr)->ia_ta()->data()), false));
+					option_ia_ta->Assign(1, Dhcpv6ToHex(std_str((*ptr)->ia_ta()->data()), false));
 					
 					dhcpv6_po->Assign(3, option_ia_ta);
 				}
@@ -194,7 +194,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 					option_iaaddr->Assign(2, new Val((*ptr)->iaaddr()->valid_lifetime(), TYPE_COUNT));
 					
 					if ( ((*ptr)->iaaddr()->len() - 24) > 0 ) {
-						option_iaaddr->Assign(3, ToHex(std_str((*ptr)->iaaddr()->data()), false));
+						option_iaaddr->Assign(3, Dhcpv6ToHex(std_str((*ptr)->iaaddr()->data()), false));
 					}
 					
 					dhcpv6_po->Assign(4, option_iaaddr);
@@ -312,7 +312,7 @@ flow DHCPV6_Flow(is_orig: bool) {
 							}
 								break;
 							default: {
-								option_ia_pd->Assign(4, ToHex(std_str((*ptr)->ia_pd()->data()), false));
+								option_ia_pd->Assign(4, Dhcpv6ToHex(std_str((*ptr)->ia_pd()->data()), false));
 							}
 								break;
 						}

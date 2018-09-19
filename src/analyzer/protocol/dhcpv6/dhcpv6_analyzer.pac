@@ -39,7 +39,7 @@ StringVal* EthAddrToStr(const u_char* addr)
 	return new StringVal(buf);
 }
 
-StringVal* ToHex(const std::string& s, bool upper_case)
+StringVal* Dhcpv6ToHex(const std::string& s, bool upper_case)
 {
 	std::ostringstream ret;
 	
