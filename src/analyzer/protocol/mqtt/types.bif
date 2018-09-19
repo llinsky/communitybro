@@ -1,0 +1,13 @@
+module MQTT;
+
+module GLOBAL;
+
+type MQTT::HEADER:  		record;
+type MQTT::CONNECT:         record;
+type MQTT::CONNACK:         record;
+type MQTT::PUBLISH: 		record;
+type MQTT::PUBACK:          record;
+type MQTT::SUBSCRIBE:       record;
+type MQTT::SUBACK:          record;
+type MQTT::UNSUBSCRIBE:     record;
+type MQTT::UNSUBACK:        record;

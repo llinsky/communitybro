@@ -4962,6 +4962,72 @@ export {
 	};
 }
 
+module MQTT;
+export {
+	type HEADER: record {
+		hdrlen              : count &log &optional;
+		QoS                 : count &log &optional;
+		dup                 : count &log &optional;
+		retain              : count &log &optional;
+	};
+
+	type CONNECT: record {
+		hdr                 : HEADER &log &optional;
+		protocol_name       : string &log &optional;
+		protocol_version    : count  &log &optional;
+		connect_flags       : count  &log &optional;
+		keep_alive          : count  &log &optional;
+		client_id           : string &log &optional;
+		clean_session       : count  &log &optional;
+		willtopic           : string &log &optional;
+		willmsg             : string &log &optional;
+		willusername        : string &log &optional;
+		willpassword        : string &log &optional;
+	};
+
+	type CONNACK: record {
+		hdr                 : HEADER &log &optional;
+		reserved            : count  &log &optional;
+		return_code         : count  &log &optional;
+	};
+
+	type PUBLISH: record {
+		hdr                 : HEADER &log &optional;
+		topic               : string &log &optional;
+		msg_id              : count  &log &optional;
+		message             : string &log &optional;
+	};
+
+	type PUBACK: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+	};
+
+	type SUBSCRIBE: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+		topic               : string &log &optional;
+		requested_qos       : count  &log &optional;
+	};
+
+	type SUBACK: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+		granted_qos         : count  &log &optional;
+	};
+
+	type UNSUBSCRIBE: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+		topic               : string &log &optional;
+	};
+
+	type UNSUBACK: record {
+		hdr                 : HEADER &log &optional;
+		msg_id              : count  &log &optional;
+	};
+}
+
 module GLOBAL;
 
 global SyslogFacility: table[string] of count = {

@@ -53,3 +53,5 @@ add_subdirectory(openvpn)
 add_subdirectory(tftp)
 add_subdirectory(dhcpv6)
 add_subdirectory(telnet)
+add_subdirectory(mqtt)
+
