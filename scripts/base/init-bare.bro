@@ -4949,7 +4949,7 @@ export {
 		software:   string &log &optional;
 	};
 
-	type ::Lens: record {
+	type Lens: record {
 		make:   string &log &optional;
 		model:  string &log &optional;
 	};
