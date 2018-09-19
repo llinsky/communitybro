@@ -4846,6 +4846,130 @@ const bits_per_uid: count = 96 &redef;
 
 global local_ip_set: addr_set &redef;
 
+module DHCPV6;
+type DUID_LLT: record {
+	hwtype:	 	count 	&log &optional;
+	duidtime:	count 	&log &optional;
+	lladdr: 	string 	&log &optional;
+};
+
+type DUID_EN: record {
+	entnum: 	count 	&log &optional;
+	identifier:	string	&log &optional;
+};
+
+type DUID_LL: record {
+	hwtype:	 	count 	&log &optional;
+	lladdr: 	string 	&log &optional;
+};
+
+type DUID_UUID: record {
+	hwtype:	 	count 	&log &optional;
+	lladdr: 	string 	&log &optional;
+};
+
+type DOMAIN_NAME: record {
+	name:		string	&log &optional;
+};		
+
+type DHCPV6_OPTION_IAADDR: record {
+	ipv6_addr:			addr	&log &optional;				
+	preferred_lifetime: count	&log &optional;
+	valid_lifetime:		count	&log &optional;
+	data:				string	&log &optional;
+};
+
+type DHCPV6_OPTION_IA_NA: record {
+	iaid:		count					&log &optional;
+	t1:			count					&log &optional;
+	t2:			count					&log &optional;
+	iaaddr:		DHCPV6_OPTION_IAADDR 	&log &optional;
+	data:		string					&log &optional;
+};
+
+type DHCPV6_OPTION_IAPREFIX: record {
+	prefix_addr:		addr	&log &optional;				
+	preferred_lifetime: count	&log &optional;
+	valid_lifetime:		count	&log &optional;
+	data:				string	&log &optional;	
+};
+
+type DHCPV6_OPTION_IA_PD: record {
+	iaid:		count					&log &optional;
+	t1:			count					&log &optional;
+	t2:			count					&log &optional;
+	iaprefix:	DHCPV6_OPTION_IAPREFIX 	&log &optional;
+	data:		string					&log &optional;
+};
+
+type DHCPV6_OPTION_IA_TA: record {
+	iaid:		count	&log &optional;
+	data:		string	&log &optional;
+};
+
+type DHCPV6_OPTION_CLIENTID: record {
+	msgtype:	count 		&log &optional;
+	duid_llt:	DUID_LLT 	&log &optional;
+ 	duid_en:	DUID_EN 	&log &optional;
+ 	duid_ll:	DUID_LL 	&log &optional;
+ 	duid_uuid:	DUID_UUID 	&log &optional;
+};
+
+type DHCPV6_OPTION_SERVERID: record {
+	msgtype:	count 		&log &optional;
+	duid_llt:	DUID_LLT 	&log &optional;
+ 	duid_en:	DUID_EN 	&log &optional;
+ 	duid_ll:	DUID_LL 	&log &optional;
+ 	duid_uuid:	:DUID_UUID 	&log &optional;
+};
+
+type DHCPV6_OPTION_ORO: record {
+	options:	vector of count &log &optional;
+};
+
+type DHCPV6_OPTION_ELAPSED_TIME: record {
+	elapsed_time:		count 	&log &optional;
+};
+
+type DHCPV6_OPTION_DNS_SERVERS: record {
+	dns_name_servers: 	vector of addr 	&log &optional;
+};
+
+type DHCPV6_OPTION_DOMAIN_LIST: record {
+	searchlist: 	string 	&log &optional;
+};
+
+type DHCPV6_OPTION_VENDOR_CLASS: record {
+	enterprise_number: 	count	&log &optional;
+	vendor_class_data: 	string	&log &optional;
+};
+
+type DHCPV6_OPTION_INFO_REFRESH_TIME: record {
+	refresh_time:	count		&log &optional;
+};
+
+type DHCPV6_OPTION_CLIENT_FQDN: record {
+	flags:			count		&log &optional;
+	domain_name:	string		&log &optional;
+};
+
+type Options: record {
+	clientid:			DHCPV6_OPTION_CLIENTID 			&log &optional; #  0
+	serverid:			DHCPV6_OPTION_SERVERID			&log &optional; #  1
+	ia_na:				DHCPV6_OPTION_IA_NA				&log &optional; #  2
+	ia_ta:				DHCPV6_OPTION_IA_TA				&log &optional; #  3
+	iaaddr:				DHCPV6_OPTION_IAADDR			&log &optional; #  4
+    oro:   				DHCPV6_OPTION_ORO 				&log &optional; #  5
+    elapsed_time:		DHCPV6_OPTION_ELAPSED_TIME		&log &optional; #  6
+    vendor_class:		DHCPV6_OPTION_VENDOR_CLASS		&log &optional; #  7
+    name_servers:		DHCPV6_OPTION_DNS_SERVERS		&log &optional; #  8
+    domain_list:		DHCPV6_OPTION_DOMAIN_LIST		&log &optional; #  9
+    ia_pd:				DHCPV6_OPTION_IA_PD				&log &optional; # 10
+    info_refresh_time:	DHCPV6_OPTION_INFO_REFRESH_TIME	&log &optional; # 11
+    client_fqdn:		DHCPV6_OPTION_CLIENT_FQDN		&log &optional; # 12
+};
+
+
 # Load these frameworks here because they use fairly deep integration with
 # BiFs and script-land defined types.
 @load base/frameworks/broker

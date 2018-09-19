@@ -76,6 +76,8 @@
 #@load base/protocols/telnet
 @load base/protocols/arp
 @load base/protocols/bittorrent
+@load base/protocols/openvpn
+@load base/protocols/tftp
 
 @load base/files/pe
 @load base/files/hash
