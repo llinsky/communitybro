@@ -48,19 +48,15 @@ redef record connection += {
 	tftp: Info &optional;
 };
 
-
 global tftp_notice_count: table[addr] of count &default = 0 &read_expire = 7 days;
 
 # Establish the variable for tracking expected connections to transfer to the second connection
 global tftp_data_expected: table[addr, port, addr] of Info &read_expire=5mins;
 
-
-
 event bro_init() &priority=5
 {
 	Log::create_stream(TFTP::LOG, [$columns=Info, $ev=log_tftp, $path="tftp"]);
 }
-
 
 event tftp_write_request(u: connection, filename: string, mode: string)
 {

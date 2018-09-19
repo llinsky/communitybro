@@ -23,11 +23,6 @@ export {
 	global log_dhcpv6: event(rec: DHCPV6::Info);
 }
 
-redef record DHCPV6::Info += {
-  ps_family: int &log &default=1;
-  ps_proto:  int &log &default=10012;
-};
-
 const ports = { 546/udp, 547/udp };
 redef likely_server_ports += { ports };
 

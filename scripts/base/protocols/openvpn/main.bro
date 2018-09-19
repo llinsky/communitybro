@@ -29,7 +29,6 @@ export {
     global log_openvpn: event(rec: Info);
 }
 
-
 redef record connection += {
     openvpn: bool &optional;
 };

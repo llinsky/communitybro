@@ -1,0 +1,6 @@
+event telnet_username_event%(c: connection, username: string%);
+event telnet_password_event%(c: connection, password: string%);
+event telnet_login_event%(c: connection, username: string, password: string, success: bool%);
+event telnet_data_event%(c: connection, data: string%);
+event telnet_sent_event%(c: connection, data: string%);
+event telnet_received_event%(c: connection, data: string%);
