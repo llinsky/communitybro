@@ -14,7 +14,7 @@ namespace plugin {
 					AddComponent(new ::file_analysis::Component("EXIF", ::file_analysis::EXIF::Instantiate));
 
 					plugin::Configuration config;
-					config.name = "CBro::exif";
+					config.name = "CBro::EXIF";
 					config.description = "Exchangeable Image File Format Analyzer";
 					config.version.major = 1;
 					config.version.minor = 0;
