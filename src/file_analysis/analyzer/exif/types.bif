@@ -1,0 +1,13 @@
+module EXIF_FILE_ANALYZER;
+
+module GLOBAL;
+
+type EXIF_FILE_ANALYZER::Latitude:   record;
+type EXIF_FILE_ANALYZER::Longitude:  record;
+type EXIF_FILE_ANALYZER::GPS:        record;
+
+type EXIF_FILE_ANALYZER::Image:      record;
+type EXIF_FILE_ANALYZER::Camera:     record;
+type EXIF_FILE_ANALYZER::Lens:       record;
+
+type EXIF_FILE_ANALYZER::Results:    record;
