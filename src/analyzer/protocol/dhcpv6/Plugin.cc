@@ -22,7 +22,7 @@ under the License.
 #include "DHCPV6_ANALYZER.h"
 
 namespace plugin {
-namespace Bro_DHCPV6_ANALYZER {
+namespace CBro_DHCPV6_ANALYZER {
 
 class Plugin : public plugin::Plugin {
 public:
