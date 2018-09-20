@@ -1,4 +1,19 @@
-2.5.5 | 2018-09-12
+1.0.0 | 2018-09-20
+   * TELNET Analyzer included
+
+   * TFTP Analyzer included
+
+   * MQTT Analyzer included
+
+   * DHCPv6 Analyzer included
+
+   * OpenVPN Analyzer included
+
+   * EXIF File Analysis Analyzer included
+
+
+1.0.0 | 2018-09-12
+   * Inclusive of Bro 2.5.5 CHANGES
 
    * Lua Script as alternative to Bro Script
        
@@ -20,4 +35,7 @@
        - event smb1_trans2_session_setup_request(c: connection, hdr: SMB1::Header);
        - event smb1_echo_response(c: connection, seq_num: count, mid: count, data: string);
 
-   * 
+   * UDP and TCP Analyzers "of last resort"
+    
+       - If no other protocol analyzer attaches, data for a given connection will still be provided
+
